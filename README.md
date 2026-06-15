@@ -23,6 +23,18 @@ The system runs in your browser at `http://localhost:5000` and shows:
 | Training images | 26,771 |
 | Training dataset | D-Fire + Indoor Fire & Smoke Detection |
 
+## Model Weights
+
+All weights are included in this repository via Git LFS.
+
+| File | Resolution | mAP50 | Description |
+|------|-----------|-------|-------------|
+| `weights/best_v7.pt` | 640×640 | 0.822 | Best model — used for demo and inference |
+| `weights/best_v4.pt` | 416×416 | 0.800 | Baseline model — faster inference, slightly lower accuracy |
+| `weights/best.pt` | 640×640 | 0.822 | Copy of best_v7.pt — default model loaded by the app |
+
+The app loads `weights/best.pt` by default. To switch to the faster baseline model update the path in `app/detector.py`.
+
 ## Requirements
 
 - Python 3.11
