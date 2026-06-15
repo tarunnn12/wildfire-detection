@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wildfire Detection System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 2C10 2 6 6 6 10C6 12.2 7.8 14 10 14C12.2 14 14 12.2 14 10C14 8 12 6 12 6C12 6 13 8 11 9C11 9 12 7 10 5C10 5 10.5 7 9 8C9 8 9.5 6 8 5C7 6.5 6 8 6 10" stroke="#FF4B2B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 14V18" stroke="#FF4B2B" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M7 18H13" stroke="#FF4B2B" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="logo-name">Wildfire Detection System</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-badge" id="system-badge">
+        <span class="pulse-dot" id="pulse-dot"></span>
+        <span id="system-status-text">Monitoring</span>
+      </div>
+      <div class="header-meta">
+        <span class="meta-item">YOLOv8m</span>
+        <span class="meta-divider"></span>
+        <span class="meta-item">640×640</span>
+        <span class="meta-divider"></span>
+        <span class="meta-item" id="fps-display">-- fps</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main layout -->
+  <main class="main">
+
+    <!-- Feed -->
+    <section class="feed-section">
+      <div class="feed-header">
+        <span class="feed-label">
+          <span class="rec-dot"></span>
+          LIVE FEED — CAM 01
+        </span>
+        <span class="feed-time" id="feed-time">--:--:--</span>
+      </div>
+      <div class="feed-wrap">
+        <img src="/video_feed" alt="Live camera feed" class="feed-img" id="feed-img">
+        <!-- Alert overlay -->
+        <div class="alert-overlay" id="alert-overlay">
+          <div class="alert-banner" id="alert-banner">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span id="alert-text">FIRE DETECTED</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <!-- Status card -->
+      <div class="card status-card" id="status-card">
+        <div class="card-label">Detection status</div>
+        <div class="status-main">
+          <div class="status-icon-wrap" id="status-icon-wrap">
+            <svg id="icon-clear" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <svg id="icon-fire" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none">
+              <path d="M12 2c0 0-4 4-4 8a4 4 0 0 0 8 0c0-2-2-4-2-4s1 2-1 3c0 0 1-2-1-4"/>
+            </svg>
+            <svg id="icon-smoke" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none">
+              <path d="M8 16c0 0 0-4 4-4s4-4 4-4"/><path d="M4 16c0 0 0-6 6-8"/><path d="M12 16v4"/><path d="M8 20h8"/>
+            </svg>
+          </div>
+          <div>
+            <div class="status-label" id="status-label">All clear</div>
+            <div class="status-sub" id="status-sub">No threats detected</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detections list -->
+      <div class="card">
+        <div class="card-label">Active detections</div>
+        <ul class="det-list" id="det-list">
+          <li class="det-empty">Camera feed running — no detections</li>
+        </ul>
+      </div>
+
+      <!-- Session stats -->
+      <div class="card">
+        <div class="card-label">Session statistics</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-value" id="stat-frames">0</span>
+            <span class="stat-label">Frames analysed</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value fire-val" id="stat-fire">0</span>
+            <span class="stat-label">Fire frames</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value smoke-val" id="stat-smoke">0</span>
+            <span class="stat-label">Smoke frames</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="stat-alert">--</span>
+            <span class="stat-label">Last alert</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model info -->
+      <div class="card">
+        <div class="card-label">Model configuration</div>
+        <div class="model-info">
+          <div class="info-row"><span>Architecture</span><span class="mono">YOLOv8m</span></div>
+          <div class="info-row"><span>Input size</span><span class="mono">640 × 640</span></div>
+          <div class="info-row"><span>Classes</span><span class="mono">fire, smoke</span></div>
+          <div class="info-row"><span>Confidence</span><span class="mono">45%</span></div>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <script src="/static/main.js"></script>
+</body>
+</html>
