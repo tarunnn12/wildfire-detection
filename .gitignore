@@ -2,7 +2,6 @@ dataset/
 weights/
 data/
 runs/
-*.pt
 __pycache__/
 *.pyc
 .vscode/
