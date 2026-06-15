@@ -88,23 +88,41 @@ Point your camera at any of the following:
 
 ## Project Structure
 wildfire-detection/
+
 │
+
 ├── app/
+
 │   ├── app.py              # Flask application and video stream
+
 │   ├── detector.py         # YOLOv8m inference wrapper
+
 │   ├── templates/
+
 │   │   └── index.html      # Main UI
+
 │   └── static/
+
 │       ├── style.css       # Dark theme stylesheet
+
 │       └── main.js         # Live polling and UI updates
+
 │
+
 ├── training/
+
 │   └── train.py            # YOLOv8m training script
+
 │
+
 ├── weights/
+
 │   └── best_v7.pt          # Trained model weights
+
 │
+
 ├── requirements.txt
+
 └── README.md
 
 ## Training Your Own Model
