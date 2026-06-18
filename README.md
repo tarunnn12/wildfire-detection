@@ -1,71 +1,75 @@
 # Wildfire Detection System
 
-A real-time fire and smoke detection system built with YOLOv8m and deployed via a Flask web application. Point any camera at fire or smoke footage and the system detects and classifies threats live in the browser.
+A real-time fire and smoke detection system built with YOLOv8m and deployed via a Flask web application. Point any camera at fire or smoke footage and the system detects and classifies it live in the browser with bounding boxes and confidence scores.
 
-## Demo
+## Live Demo
 
-The system runs in your browser at `http://localhost:5000` and shows:
-- Live annotated camera feed with bounding boxes
-- Fire and smoke detection with confidence scores
-- Session statistics and alert history
-- Real-time FPS counter
+Run `python app/app.py` and open `http://localhost:5000`. The app streams your webcam feed, overlays detection boxes in real time, and shows session statistics (frames analysed, fire/smoke counts, last alert time).
 
-## Model
+## Final Model
 
 | Property | Value |
 |----------|-------|
+| File | `weights/best.pt` (same as `weights/best_fasdd_unlv50.pt`) |
 | Architecture | YOLOv8m |
 | Input size | 640 × 640 |
-| Classes | fire, smoke |
-| mAP50 | 0.822 |
-| Precision | 0.831 |
-| Recall | 0.737 |
-| Training images | 26,771 |
-| Training dataset | D-Fire + Indoor Fire & Smoke Detection |
+| Classes | `smoke` (0), `fire` (1) |
+| mAP50 | 0.810 |
+| Precision | 0.815 |
+| Recall | 0.734 |
+| Live confidence | Consistently 85–94% on real fire/smoke footage |
 
-## Model Weights
+This is the model the app loads by default and the one used for all demos.
 
-All weights are included in this repository via Git LFS.
+## How This Model Was Built
 
-| File | Resolution | mAP50 | Description |
-|------|-----------|-------|-------------|
-| `weights/best_v7.pt` | 640×640 | 0.822 | Best model — used for demo and inference |
-| `weights/best_v4.pt` | 416×416 | 0.800 | Baseline model — faster inference, slightly lower accuracy |
-| `weights/best.pt` | 640×640 | 0.822 | Copy of best_v7.pt — default model loaded by the app |
+The project went through several iterations of dataset improvement. Each step is preserved in this repo so the process is fully reproducible and auditable.
 
-The app loads `weights/best.pt` by default. To switch to the faster baseline model update the path in `app/detector.py`.
+### 1. Initial dataset
+Started with the **D-Fire** dataset (~21,000 images) and an **Indoor Fire & Smoke** dataset (~5,000 images), merged into one YOLO-format dataset with classes `0=smoke, 1=fire`.
+
+### 2. Baseline training
+Trained YOLOv8m from COCO-pretrained weights at 640×640 resolution. Result: **mAP50 = 0.822** on the original validation split (see `training/train.py` for this baseline script).
+
+### 3. Adding real wildfire footage (UNLV dataset)
+Added the UNLV Wildfire Detection dataset (~3,695 images of real drone/ground footage from wildfires including the 2023 Maui fires). This dataset used reversed class IDs (`0=fire, 1=smoke`), so labels were remapped to match the project standard before merging.
+
+This produced `best_unlv50.pt` — evaluated on a harder, more diverse validation set that included this new wildfire footage, the original model scored 0.743 mAP50, while the UNLV-trained model scored **0.803 mAP50**, a +0.060 improvement, with fire recall improving by +0.061.
+
+### 4. Adding FASDD (large-scale fire/smoke dataset)
+Added a 20% audited subset (~9,500 images) of **FASDD** (Flame And Smoke Detection Dataset), a large, heterogeneous research dataset known for covering complex and varied fire scenes. This dataset also used reversed class IDs and was remapped before merging.
+
+Trained fresh on the combined dataset (~28,600 train images). This produced the final model, `best_fasdd_unlv50.pt`, which improved over the UNLV-only model on **both** the new harder validation set (+0.12 mAP50) and the original validation set (0.803 → **0.810** mAP50) — confirming it generalized better without forgetting earlier learning.
+
+### Dataset quality control
+Every dataset was audited before use with `tools/audit_*.py` scripts, which check for:
+- Missing or empty label files
+- Invalid class IDs
+- Out-of-range or malformed bounding boxes
+- Extremely tiny boxes (likely annotation noise)
+
+Across the full pipeline, fewer than 0.2% of annotations were found invalid and removed (`tools/fix_dataset.py`).
 
 ## Requirements
 
 - Python 3.11
-- NVIDIA GPU with CUDA (recommended) or CPU
+- NVIDIA GPU with CUDA (recommended) — tested on RTX 5070 Laptop GPU
 - Webcam or camera device
 
 ## Installation
 
-### 1. Clone the repository
 ```bash
 git clone https://github.com/tarunnn12/wildfire-detection.git
 cd wildfire-detection
-```
 
-### 2. Create conda environment
-```bash
 conda create -n wildfire python=3.11 -y
 conda activate wildfire
-```
 
-### 3. Install PyTorch with CUDA (skip if CPU only)
-```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
-```
-
-### 4. Install dependencies
-```bash
 pip install ultralytics opencv-python flask numpy Pillow
 ```
 
-### 5. Verify GPU (optional)
+Verify GPU (optional):
 ```bash
 python -c "import torch; print(torch.cuda.is_available())"
 ```
@@ -73,68 +77,101 @@ python -c "import torch; print(torch.cuda.is_available())"
 ## Running the App
 
 ```bash
-conda activate wildfire
 python app/app.py
 ```
-
-Open `http://localhost:5000` in your browser. Allow camera access when prompted.
-
-## Testing
-
-Point your camera at any of the following:
-- Fire images or videos on a phone screen
-- Smoke footage
-- Plain background (should show no detections)
+Open `http://localhost:5000`, allow camera access, and point the camera at fire or smoke (a video on a phone screen works well for testing).
 
 ## Project Structure
+
 wildfire-detection/
+
 │
+
 ├── app/
-│   ├── app.py              # Flask application and video stream
+
+│   ├── app.py              # Flask app, video stream, session stats
+
 │   ├── detector.py         # YOLOv8m inference wrapper
-│   ├── templates/
-│   │   └── index.html      # Main UI
+
+│   ├── templates/index.html
+
 │   └── static/
-│       ├── style.css       # Dark theme stylesheet
+
+│       ├── style.css       # Dark theme UI
+
 │       └── main.js         # Live polling and UI updates
+
 │
+
 ├── training/
-│   └── train.py            # YOLOv8m training script
+
+│   ├── train.py                        # First baseline training script (D-Fire + Indoor)
+
+│   └── train_fasdd_unlv50_fresh.py     # Final training script (UNLV + FASDD)
+
 │
+
+├── tools/                              # Dataset engineering pipeline
+
+│   ├── audit_yolo_dataset.py           # Validates label files for the base dataset
+
+│   ├── audit_unlv_dataset.py           # Validates UNLV dataset before merging
+
+│   ├── audit_fasdd_dataset.py          # Validates FASDD dataset before merging
+
+│   ├── remap_unlv_labels.py            # Fixes UNLV's reversed class IDs
+
+│   ├── remap_fasdd_labels.py           # Fixes FASDD's reversed class IDs
+
+│   ├── create_fasdd_subset.py          # Creates a random 20% audited subset of FASDD
+
+│   ├── merge_unlv50_with_fasdd20.py    # Merges UNLV + FASDD subset into final dataset
+
+│   ├── evaluate_models.py              # Compares two models on a validation set
+
+│   └── compare_final_models.py         # Full head-to-head comparison across val sets
+
+│
+
+├── dataset/                 # Training data (raw + processed; large folders, see .gitattributes)
+
 ├── weights/
-│   └── best_v7.pt          # Trained model weights
+
+│   ├── best.pt                  # Final model (default, loaded by the app)
+
+│   └── best_fasdd_unlv50.pt     # Same model, kept under its descriptive name
+
 │
+
 ├── requirements.txt
+
 └── README.md
 
 ## Training Your Own Model
 
-To retrain on your own dataset:
-
-1. Prepare dataset in YOLO format with two classes: `smoke` (0), `fire` (1)
-2. Update `dataset.yaml` with your dataset paths
-3. Run training:
+To retrain from scratch on your own data, prepare a YOLO-format dataset with two classes (`0=smoke, 1=fire`), point a `data.yaml` at it, and run:
 
 ```bash
-python training/train.py
+python training/train_fasdd_unlv50_fresh.py
 ```
 
-Training configuration used:
-- Base model: YOLOv8m pretrained on COCO
-- Epochs: 80 (early stopping patience=15)
+Key training settings used for the final model:
+- Base: YOLOv8m, COCO-pretrained
+- Epochs: 80 (early stopping, patience=20)
 - Image size: 640
 - Batch size: 8
-- Augmentation: mosaic, HSV shift, horizontal flip, mixup
+- Augmentation: mosaic, HSV shift, horizontal flip
 
 ## Tech Stack
 
 - [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics)
 - PyTorch 2.11 + CUDA 12.8
-- Flask 3.0
-- OpenCV
-- HTML / CSS / JavaScript
+- Flask 3.0 + OpenCV
+- HTML / CSS / JavaScript (no frontend framework)
 
 ## Dataset Sources
 
-- [D-Fire Dataset](https://www.kaggle.com/datasets/sayedgamal99/smoke-fire-detection-yolo) — 21,000+ images
-- [Indoor Fire & Smoke Detection](https://www.kaggle.com/datasets/sinchanashivanand/indoor-fire-and-smoke-detection-with-yolov8) — 5,000+ images
+- [D-Fire Dataset](https://www.kaggle.com/datasets/sayedgamal99/smoke-fire-detection-yolo)
+- [Indoor Fire & Smoke Detection](https://www.kaggle.com/datasets/sinchanashivanand/indoor-fire-and-smoke-detection-with-yolov8)
+- [UNLV Wildfire Detection with Bounding Boxes](https://universe.roboflow.com/unlv-c6san/wildfire-detection-with-bounding-boxes)
+- [FASDD (Flame And Smoke Detection Dataset)](https://universe.roboflow.com/forestfiresmoke/fasdd_cv-dx83j)
