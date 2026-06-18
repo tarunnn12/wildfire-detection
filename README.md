@@ -89,6 +89,7 @@ wildfire-detection/
 
 ├── app/
 
+<<<<<<< HEAD
 │   ├── app.py              # Flask app, video stream, session stats
 
 │   ├── detector.py         # YOLOv8m inference wrapper
@@ -98,6 +99,19 @@ wildfire-detection/
 │   └── static/
 
 │       ├── style.css       # Dark theme UI
+=======
+│   ├── app.py              # Flask application and video stream
+
+│   ├── detector.py         # YOLOv8m inference wrapper
+
+│   ├── templates/
+
+│   │   └── index.html      # Main UI
+
+│   └── static/
+
+│       ├── style.css       # Dark theme stylesheet
+>>>>>>> 7b87ee948288644b3d2e4528129a18229667ebcd
 
 │       └── main.js         # Live polling and UI updates
 
@@ -105,6 +119,7 @@ wildfire-detection/
 
 ├── training/
 
+<<<<<<< HEAD
 │   ├── train.py                        # First baseline training script (D-Fire + Indoor)
 
 │   └── train_fasdd_unlv50_fresh.py     # Final training script (UNLV + FASDD)
@@ -140,6 +155,15 @@ wildfire-detection/
 │   ├── best.pt                  # Final model (default, loaded by the app)
 
 │   └── best_fasdd_unlv50.pt     # Same model, kept under its descriptive name
+=======
+│   └── train.py            # YOLOv8m training script
+
+│
+
+├── weights/
+
+│   └── best_v7.pt          # Trained model weights
+>>>>>>> 7b87ee948288644b3d2e4528129a18229667ebcd
 
 │
 
@@ -171,7 +195,12 @@ Key training settings used for the final model:
 
 ## Dataset Sources
 
+<<<<<<< HEAD
 - [D-Fire Dataset](https://www.kaggle.com/datasets/sayedgamal99/smoke-fire-detection-yolo)
 - [Indoor Fire & Smoke Detection](https://www.kaggle.com/datasets/sinchanashivanand/indoor-fire-and-smoke-detection-with-yolov8)
 - [UNLV Wildfire Detection with Bounding Boxes](https://universe.roboflow.com/unlv-c6san/wildfire-detection-with-bounding-boxes)
 - [FASDD (Flame And Smoke Detection Dataset)](https://universe.roboflow.com/forestfiresmoke/fasdd_cv-dx83j)
+=======
+- [D-Fire Dataset](https://www.kaggle.com/datasets/sayedgamal99/smoke-fire-detection-yolo) — 21,000+ images
+- [Indoor Fire & Smoke Detection](https://www.kaggle.com/datasets/sinchanashivanand/indoor-fire-and-smoke-detection-with-yolov8) — 5,000+ images
+>>>>>>> 7b87ee948288644b3d2e4528129a18229667ebcd
