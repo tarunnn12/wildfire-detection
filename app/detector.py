@@ -13,7 +13,7 @@ BOX_COLORS = {
 
 
 class FireDetector:
-    def __init__(self, weights=r'C:\prsnl data\vscode\projects\wildfire\weights\best_v4.pt', conf=0.45):
+    def __init__(self, weights=r'C:\prsnl data\vscode\projects\wildfire\weights\best.pt', conf=0.45):
         self.model = YOLO(weights)
         self.conf = conf
 

@@ -95,6 +95,33 @@ async function poll() {
   }
 }
 
+async function sendManualAlert() {
+  const btn = document.getElementById('send-alert-btn');
+  btn.disabled = true;
+  btn.textContent = 'SENDING...';
+
+  try {
+    const res = await fetch('/api/send_alert', { method: 'POST' });
+    const data = await res.json();
+
+    if (data.sent) {
+      btn.textContent = '✓ ALERT SENT';
+      btn.style.background = 'var(--clear)';
+    } else {
+      btn.textContent = data.message;
+      btn.style.background = 'var(--text-muted)';
+    }
+  } catch (e) {
+    btn.textContent = 'FAILED — RETRY';
+  }
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = 'SEND ALERT';
+    btn.style.background = 'var(--fire)';
+  }, 3000);
+}
+
 setInterval(poll, 700);
 setInterval(updateClock, 1000);
 updateClock();
